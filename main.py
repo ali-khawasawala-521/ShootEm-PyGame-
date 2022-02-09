@@ -1,8 +1,8 @@
 '''
 Author: Ali Asgar Khawasawala
-Description: A Simple Game of Shooting Ball with Even Number.
-Note: Game will be slow on Repl, but will work fine on local machine.
+Description: A Simple yet Educational Ball Shooting Game for testing the knowledge of Number System.
 '''
+
 import sys # Provide System related functionality.
 import random # Provide Functionality for Randomness.
 import math # Provide Essential Math Funtionality.
@@ -16,6 +16,23 @@ class Tile(pygame.sprite.Sprite):
         self.image = pygame.image.load(picture_path) # Loading Image
         self.rect = self.image.get_rect() # Creating Rect Object
         self.rect.topleft = (pos_x, pos_y) # Positioning Rect Object
+
+
+# Class for UI Elements
+class UI_Element(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y, imgPath, type):
+        super().__init__()
+        self.x = pos_x
+        self.y = pos_y
+        self.type = type
+        self.image = pygame.image.load(imgPath)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+
+# Class for Head over Display
+class HUD():
+    pass
+
 
 # Class for creating Crosshair like Mouse Pointer.
 class Crosshair(pygame.sprite.Sprite):
@@ -52,7 +69,7 @@ class Ball(pygame.sprite.Sprite):
         ball_colors = ('blue','red')
 
         # Loading Ball Image of respective color
-        self.image = pygame.image.load(f'ball_{random.choice(ball_colors)}.png')
+        self.image = pygame.image.load(f'assets/ball_{random.choice(ball_colors)}.png')
 
         # Ball image dimension (height and width)
         imageWidth = self.image.get_width()
@@ -63,7 +80,7 @@ class Ball(pygame.sprite.Sprite):
         self.selected_num = random.choice(numbers)
         
         # Loading Selected Number Image
-        self.numberImg = pygame.image.load(f'number_{self.selected_num}.png')
+        self.numberImg = pygame.image.load(f'assets/number_{self.selected_num}.png')
 
         # Number Image Dimension (height and width)
         numberImgWidth = self.numberImg.get_width()
@@ -96,6 +113,40 @@ class Ball(pygame.sprite.Sprite):
         self.rect.x += self.speed_x
         self.rect.y += self.speed_y
 
+# Class for managing screens
+class Stage():
+    def __init__(self):
+        self.current_screen = "Game"
+        self.totalBalls = 0
+        self.totalEvenBalls = 0
+        self.ball_group = []
+    
+    def createBall(self):
+        # Resetting Ball Counts
+        self.totalBalls = 0
+        self.totalEvenBalls = 0
+        
+        # Ball Sprite Group
+        self.ball_group = pygame.sprite.Group()
+
+        # Creating and adding balls in ball group.
+        for i in range(20):
+            self.ball_group.add(Ball(random.randrange(64, screenWidth-64), random.randrange(64, screenHeight-64)))
+
+        # Finding total number of even ball and assign it to totalEvenBalls.
+        for ball in self.ball_group:
+            self.totalBalls += 1
+            if ball.is_even:
+                self.totalEvenBalls += 1
+
+        # Drawing and Updating Balls and its position on screen. 
+        self.ball_group.draw(screen)
+        self.ball_group.update()
+
+
+
+
+
 ## Game Setup
 # Initializing PyGame Module
 pygame.init()
@@ -126,27 +177,17 @@ tile_col = math.ceil(screenHeight/64)
 # Creating Tiles
 for row in range(tile_row):
     for col in range(tile_col):
-        tile_group.add(Tile(row*64, col*64, 'background_brown.png'))
+        tile_group.add(Tile(row*64, col*64, 'assets/background_brown.png'))
 
 #Crosshair Mouse Pointer
-crosshair = Crosshair('crosshair.png')
+crosshair = Crosshair('assets/crosshair.png')
 crosshair_group = pygame.sprite.Group()
 crosshair_group.add(crosshair)
 
 # Variable for tracking total number of Even Balls.
 totalEvenBalls = 0
 
-# Ball Sprite Group
-ball_group = pygame.sprite.Group()
 
-# Creating Multiple Balls in Group, Number under range define total balls.
-for i in range(20):
-    ball_group.add(Ball(random.randrange(64, screenWidth-64), random.randrange(64, screenHeight-64)))
-
-# Loop for finding total number of even ball and assign it to totalEvenBalls.
-for ball in ball_group:
-    if ball.is_even:
-        totalEvenBalls += 1
 
 ## Game Loop
 while True:
@@ -164,10 +205,6 @@ while True:
 
     # Drawing Background using Tiles  
     tile_group.draw(screen)
-
-    # Drawing and Updating Balls and its position on screen. 
-    ball_group.draw(screen)
-    ball_group.update()
 
     # Drawing and updating Crosshair and its position on screen.
     crosshair_group.draw(screen)
