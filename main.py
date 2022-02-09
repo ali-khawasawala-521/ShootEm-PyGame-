@@ -46,12 +46,12 @@ class Crosshair(pygame.sprite.Sprite):
         global totalEvenBalls # Global Variable for Tracking total number of even balls.
 
         # Checking whether crosshair is on ball while shooting.
-        ball = pygame.sprite.spritecollide(crosshair, ball_group, False)
+        ball = pygame.sprite.spritecollide(crosshair, stage.ball_group, False)
         
         # Checking if ball is even or odd.
         if ball and ball[0].is_even:
             totalEvenBalls -= 1
-            ball_group.remove(ball[0])
+            stage.ball_group.remove(ball[0])
     
     # Updating Position of crosshair on basis of Mouse Cursor Position on Game Screen.
     def update(self):
@@ -187,7 +187,7 @@ crosshair_group.add(crosshair)
 # Variable for tracking total number of Even Balls.
 totalEvenBalls = 0
 
-
+stage = Stage()
 
 ## Game Loop
 while True:
