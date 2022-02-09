@@ -20,19 +20,32 @@ class Tile(pygame.sprite.Sprite):
 
 # Class for UI Elements
 class UI_Element(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y, imgPath, type):
+    def __init__(self, pos_x, pos_y, imgPath, label, type):
         super().__init__()
         self.x = pos_x
         self.y = pos_y
         self.type = type
         self.image = pygame.image.load(imgPath)
+
+        imgWidth = self.image.get_width()
+        imgHeight = self.image.get_height()
+
+        font = pygame.font.Font("assets/KenneyFutureNarrow.ttf", 20)
+        self.label = label
+        self.labelFont = font.render(self.label, True, (255,255,255))
+        labelWidth = self.labelFont.get_width()
+        labelHeight = self.labelFont.get_height()
+
+        self.image.blit(self.labelFont, (int(imgWidth/2- labelWidth/2), int(imgHeight/2 - labelHeight/2)))
+        
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
 
 # Class for Head over Display
 class HUD():
-    pass
-
+    def __init__(self):
+        super().__init__()
+        self.HUD_font = pygame.font.Font("assets/KenneyFutureNarrow.ttf", 30)
 
 # Class for creating Crosshair like Mouse Pointer.
 class Crosshair(pygame.sprite.Sprite):
@@ -41,18 +54,29 @@ class Crosshair(pygame.sprite.Sprite):
         self.image = pygame.image.load(picture_path) # Loading Image 
         self.rect = self.image.get_rect() # Creating Rect Object
     
+    # Defition for Play and Exit Button
+    def gameUI(self):
+        uiCollide = pygame.sprite.spritecollide(crosshair, stage.ui_group, False)
+        if uiCollide and uiCollide[0].label == "PLAY":
+            stage.createBall()
+            stage.currentScreen = "Game Screen" # Changing screen to Game Play
+
+        elif uiCollide and uiCollide[0].label == "EXIT":
+            pygame.quit()
+            sys.exit()
+
     # Defining what to do if crosshair collide with ball and shoot.
     def shoot(self):
-        global totalEvenBalls # Global Variable for Tracking total number of even balls.
-
         # Checking whether crosshair is on ball while shooting.
         ball = pygame.sprite.spritecollide(crosshair, stage.ball_group, False)
         
         # Checking if ball is even or odd.
         if ball and ball[0].is_even:
-            totalEvenBalls -= 1
+            stage.totalEvenBalls -= 1
             stage.ball_group.remove(ball[0])
-    
+            if stage.totalEvenBalls <= 0:
+                stage.currentScreen = "Game Over" # Changing screen to Game Over
+
     # Updating Position of crosshair on basis of Mouse Cursor Position on Game Screen.
     def update(self):
         self.rect.center = pygame.mouse.get_pos()
@@ -116,11 +140,22 @@ class Ball(pygame.sprite.Sprite):
 # Class for managing screens
 class Stage():
     def __init__(self):
-        self.current_screen = "Game"
+        self.currentScreen = "Main Menu"
         self.totalBalls = 0
         self.totalEvenBalls = 0
         self.ball_group = []
-    
+
+        self.font = pygame.font.Font("assets/KenneyFutureNarrow.ttf", 20)
+
+        self.playButton = UI_Element(int(screenWidth/2 - 100), int(screenHeight/2), "assets/button.png", "PLAY", "button")
+        self.exitButton = UI_Element(int(screenWidth/2 + 100), int(screenHeight/2), "assets/button.png", "EXIT", "button")
+        self.replayButton =  UI_Element(int(screenWidth/2 - 100), int(screenHeight/2), "assets/button.png", "REPLAY", "button")
+        
+        self.ui_group = pygame.sprite.Group()
+        # self.ui_group.add(self.title)
+        self.ui_group.add(self.playButton) 
+        self.ui_group.add(self.exitButton)
+
     def createBall(self):
         # Resetting Ball Counts
         self.totalBalls = 0
@@ -139,13 +174,60 @@ class Stage():
             if ball.is_even:
                 self.totalEvenBalls += 1
 
-        # Drawing and Updating Balls and its position on screen. 
+    def crossHairRender(self):
+        # Drawing and updating Crosshair and its position on screen.
+        crosshair_group.draw(screen)
+        crosshair_group.update()
+
+    def ballRender(self):
+        # Drawing and updating Ball and its position on screen.
         self.ball_group.draw(screen)
         self.ball_group.update()
 
+    def commonEvents(self, btnPressed):
+        # Checking Events
+        for event in pygame.event.get():
+        
+            # Checking if close button is pressed or not, if pressed then quit the game.
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+                
+            # Checking mousebutton is clicked or not.
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                btnPressed()
 
+    def menuScreen(self, type):
+        self.commonEvents(crosshair.gameUI)
+        # screen.blit(self.title, (int(screenWidth/2) - int(self.title.get_width()/2),10))
+        if type == "Main Menu":
+            if self.ui_group.sprites()[0].label != "PLAY":
+                self.ui_group = pygame.sprite.Group()
+                self.ui.group.add(self.playButton)
+                self.ui.group.add(self.exitButton)
 
+        elif type == "Game Over":
+            if self.ui_group.sprites()[0].label != "REPLAY":
+                self.ui_group = pygame.sprite.Group()
+                self.ui_group.add(self.replayButton)
+                self.ui_group.add(self.exitButton)
+        
+        self.ui_group.draw(screen)
+        self.ui_group.update()
+        self.crossHairRender()    
 
+    def gameScreen(self):
+        self.commonEvents(crosshair.shoot)
+        self.ballRender()
+        self.crossHairRender()
+
+    def screenManager(self):
+        if self.currentScreen == "Game Over":
+            self.menuScreen("Game Over")
+        elif self.currentScreen == "Game Screen":
+            self.gameScreen()
+        else:
+            self.menuScreen("Main Menu")
 
 ## Game Setup
 # Initializing PyGame Module
@@ -191,24 +273,11 @@ stage = Stage()
 
 ## Game Loop
 while True:
-    # Checking Events
-    for event in pygame.event.get():
-    
-        # Checking if close button is pressed or not, if pressed then quit the game.
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-            
-        # Checking mousebutton is clicked or not.
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            crosshair.shoot()
-
     # Drawing Background using Tiles  
     tile_group.draw(screen)
 
-    # Drawing and updating Crosshair and its position on screen.
-    crosshair_group.draw(screen)
-    crosshair_group.update()
+    # screen management
+    stage.screenManager()
 
     # updating all graphics on screen.
     pygame.display.flip()
