@@ -57,7 +57,7 @@ class Crosshair(pygame.sprite.Sprite):
     # Defition for Play and Exit Button
     def gameUI(self):
         uiCollide = pygame.sprite.spritecollide(crosshair, stage.ui_group, False)
-        if uiCollide and uiCollide[0].label == "PLAY":
+        if uiCollide and uiCollide[0].label == "PLAY" or uiCollide[0].label == "REPLAY":
             stage.createBall()
             stage.currentScreen = "Game Screen" # Changing screen to Game Play
 
@@ -146,13 +146,14 @@ class Stage():
         self.ball_group = []
 
         self.font = pygame.font.Font("assets/KenneyFutureNarrow.ttf", 20)
-
+        self.font_two = pygame.font.Font("assets/KenneyFutureNarrow.ttf", 40)
+        self.title = UI_Element(int(screenWidth/2), 50, "assets/title.png", "", "title")
         self.playButton = UI_Element(int(screenWidth/2 - 100), int(screenHeight/2), "assets/button.png", "PLAY", "button")
         self.exitButton = UI_Element(int(screenWidth/2 + 100), int(screenHeight/2), "assets/button.png", "EXIT", "button")
         self.replayButton =  UI_Element(int(screenWidth/2 - 100), int(screenHeight/2), "assets/button.png", "REPLAY", "button")
         
         self.ui_group = pygame.sprite.Group()
-        # self.ui_group.add(self.title)
+        self.ui_group.add(self.title)
         self.ui_group.add(self.playButton) 
         self.ui_group.add(self.exitButton)
 
@@ -201,14 +202,18 @@ class Stage():
         self.commonEvents(crosshair.gameUI)
         # screen.blit(self.title, (int(screenWidth/2) - int(self.title.get_width()/2),10))
         if type == "Main Menu":
-            if self.ui_group.sprites()[0].label != "PLAY":
+            if self.ui_group.sprites()[1].label != "PLAY":
                 self.ui_group = pygame.sprite.Group()
-                self.ui.group.add(self.playButton)
-                self.ui.group.add(self.exitButton)
+                self.ui_group.add(self.title)
+                self.ui_group.add(self.playButton)
+                self.ui_group.add(self.exitButton)
 
         elif type == "Game Over":
-            if self.ui_group.sprites()[0].label != "REPLAY":
+            won = self.font_two.render("Bravo! You Did It", True, (255,255,255))
+            screen.blit(won, (int(screenWidth/2 - won.get_width()/2), int(screenHeight/4)))
+            if self.ui_group.sprites()[1].label != "REPLAY":
                 self.ui_group = pygame.sprite.Group()
+                self.ui_group.add(self.title)
                 self.ui_group.add(self.replayButton)
                 self.ui_group.add(self.exitButton)
         
