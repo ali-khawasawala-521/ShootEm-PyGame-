@@ -51,7 +51,7 @@ class HUD():
 class Crosshair(pygame.sprite.Sprite):
     def __init__(self, picture_path):
         super().__init__() # Initializing Base Class
-        self.image = pygame.image.load(picture_path) # Loading Image 
+        self.image = pygame.image.load(picture_path) # Loading Image
         self.rect = self.image.get_rect() # Creating Rect Object
     
     # Defition for Play and Exit Button
@@ -76,6 +76,8 @@ class Crosshair(pygame.sprite.Sprite):
             stage.ball_group.remove(ball[0])
             if stage.totalEvenBalls <= 0:
                 stage.currentScreen = "Game Over" # Changing screen to Game Over
+                stage.lastTimer = stage.timer//60
+                stage.timer = 0
 
     # Updating Position of crosshair on basis of Mouse Cursor Position on Game Screen.
     def update(self):
@@ -141,6 +143,9 @@ class Ball(pygame.sprite.Sprite):
 class Stage():
     def __init__(self):
         self.currentScreen = "Main Menu"
+        self.timer = 0
+        self.lastTimer = 0
+
         self.totalBalls = 0
         self.totalEvenBalls = 0
         self.ball_group = []
@@ -166,7 +171,7 @@ class Stage():
         self.ball_group = pygame.sprite.Group()
 
         # Creating and adding balls in ball group.
-        for i in range(20):
+        for i in range(80):
             self.ball_group.add(Ball(random.randrange(64, screenWidth-64), random.randrange(64, screenHeight-64)))
 
         # Finding total number of even ball and assign it to totalEvenBalls.
@@ -209,7 +214,7 @@ class Stage():
                 self.ui_group.add(self.exitButton)
 
         elif type == "Game Over":
-            won = self.font_two.render("Bravo! You Did It", True, (255,255,255))
+            won = self.font_two.render(f"Bravo! You Did It. You Take {self.lastTimer} seconds.", True, (255,255,255))
             screen.blit(won, (int(screenWidth/2 - won.get_width()/2), int(screenHeight/4)))
             if self.ui_group.sprites()[1].label != "REPLAY":
                 self.ui_group = pygame.sprite.Group()
@@ -223,8 +228,12 @@ class Stage():
 
     def gameScreen(self):
         self.commonEvents(crosshair.shoot)
+        timer = self.timer // 60
+        self.timerText = self.font.render(f"TIMER: {timer}", True, (255,255,255))
         self.ballRender()
+        screen.blit(self.timerText, (10,10))
         self.crossHairRender()
+        self.timer += 1
 
     def screenManager(self):
         if self.currentScreen == "Game Over":
@@ -270,9 +279,6 @@ for row in range(tile_row):
 crosshair = Crosshair('assets/crosshair.png')
 crosshair_group = pygame.sprite.Group()
 crosshair_group.add(crosshair)
-
-# Variable for tracking total number of Even Balls.
-totalEvenBalls = 0
 
 stage = Stage()
 
