@@ -1,10 +1,10 @@
 '''
 Author: Ali Asgar Khawasawala
-Description: A Simple yet Educational Ball Shooting Game for testing the knowledge of Number System.
+Description: A simple ball shooting game developed with Python and PyGame for building the concentration power and the knowledge of even and odd numbers in kids.
 '''
 
 import sys # Provide System related functionality.
-import random # Provide Functionality for Randomness.
+import random # Provide Randomness.
 import math # Provide Essential Math Funtionality.
 import pygame # Provide Game Related Functions.
 
@@ -20,33 +20,46 @@ class Tile(pygame.sprite.Sprite):
 
 # Class for UI Elements
 class UI_Element(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y, imgPath, label, type):
+    def __init__(self, pos_x, pos_y, imgList, label, type):
         super().__init__()
         self.x = pos_x
         self.y = pos_y
         self.type = type
-        self.image = pygame.image.load(imgPath)
+        self.imgIndex = 0 
+        self.images = []
 
-        imgWidth = self.image.get_width()
-        imgHeight = self.image.get_height()
+        for i in imgList:
+            self.images.append(pygame.image.load(i)) 
+
+        self.image = self.images[self.imgIndex]
+
+        self.imgWidth = self.image.get_width()
+        self.imgHeight = self.image.get_height()
 
         font = pygame.font.Font("assets/KenneyFutureNarrow.ttf", 20)
         self.label = label
         self.labelFont = font.render(self.label, True, (255,255,255))
-        labelWidth = self.labelFont.get_width()
-        labelHeight = self.labelFont.get_height()
-
-        self.image.blit(self.labelFont, (int(imgWidth/2- labelWidth/2), int(imgHeight/2 - labelHeight/2)))
+        self.labelWidth = self.labelFont.get_width()
+        self.labelHeight = self.labelFont.get_height()
         
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
 
-# Class for Head over Display
-class HUD():
-    def __init__(self):
-        super().__init__()
-        self.HUD_font = pygame.font.Font("assets/KenneyFutureNarrow.ttf", 30)
+    def update(self):
+        mousePos = pygame.mouse.get_pos()
+        # print(f"Mouse x: {mousePos[0]}")
+        # print(f"Mouse y: {mousePos[1]}")
+        if mousePos[0] >= self.rect.x and mousePos[0] <= (self.rect.x + self.rect.width) and mousePos[1] >= self.rect.y and mousePos[1] <= (self.rect.y + self.rect.height):
+            self.imgIndex = 1
+        else:
+            self.imgIndex = 0
 
+        if self.imgIndex >= len(self.images):
+            self.imgIndex = 0
+        
+        self.image = self.images[self.imgIndex]
+        self.image.blit(self.labelFont, (int(self.imgWidth/2 - self.labelWidth/2), int(self.imgHeight/2 - self.labelHeight/2)))
+        
 # Class for creating Crosshair like Mouse Pointer.
 class Crosshair(pygame.sprite.Sprite):
     def __init__(self, picture_path):
@@ -67,7 +80,7 @@ class Crosshair(pygame.sprite.Sprite):
 
     # Defining what to do if crosshair collide with ball and shoot.
     def shoot(self):
-        # Checking whether crosshair is on ball while shooting.
+        # Checking whether crosshair is on ball while shooting
         ball = pygame.sprite.spritecollide(crosshair, stage.ball_group, False)
         
         # Checking if ball is even or odd.
@@ -150,12 +163,14 @@ class Stage():
         self.totalEvenBalls = 0
         self.ball_group = []
 
+        self.buttons = ["assets/button_grey.png", "assets/button_yellow.png"]
+
         self.font = pygame.font.Font("assets/KenneyFutureNarrow.ttf", 20)
         self.font_two = pygame.font.Font("assets/KenneyFutureNarrow.ttf", 40)
-        self.title = UI_Element(int(screenWidth/2), 50, "assets/title.png", "", "title")
-        self.playButton = UI_Element(int(screenWidth/2 - 100), int(screenHeight/2), "assets/button.png", "PLAY", "button")
-        self.exitButton = UI_Element(int(screenWidth/2 + 100), int(screenHeight/2), "assets/button.png", "EXIT", "button")
-        self.replayButton =  UI_Element(int(screenWidth/2 - 100), int(screenHeight/2), "assets/button.png", "REPLAY", "button")
+        self.title = UI_Element(int(screenWidth/2), 50, ["assets/title.png"], "", "title")
+        self.playButton = UI_Element(int(screenWidth/2 - 100), int(screenHeight/2), self.buttons, "PLAY", "button")
+        self.exitButton = UI_Element(int(screenWidth/2 + 100), int(screenHeight/2), self.buttons, "EXIT", "button")
+        self.replayButton =  UI_Element(int(screenWidth/2 - 100), int(screenHeight/2), self.buttons, "REPLAY", "button")
         
         self.ui_group = pygame.sprite.Group()
         self.ui_group.add(self.title)
@@ -251,8 +266,8 @@ pygame.init()
 clock = pygame.time.Clock()
 
 # Screen Dimension Related Variables.
-screenWidth  =  1200
-screenHeight =  600
+screenWidth  =  1360 #1200
+screenHeight =  700 #600
 
 # Game Window
 screen = pygame.display.set_mode((screenWidth, screenHeight))
