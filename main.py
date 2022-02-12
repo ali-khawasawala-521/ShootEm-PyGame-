@@ -3,11 +3,11 @@ Author: Ali Asgar Khawasawala
 Description: A simple ball shooting game developed with Python and PyGame for building the concentration power and the knowledge of even and odd numbers in kids.
 '''
 
-import sys # Provide System related functionality.
-import random # Provide Randomness.
-import math # Provide Essential Math Funtionality.
-import pygame # Provide Game Related Functions.
-
+import sys
+import random
+import math
+import time
+import pygame
 
 # Class for creating Background Tiles.
 class Tile(pygame.sprite.Sprite):
@@ -70,6 +70,12 @@ class Crosshair(pygame.sprite.Sprite):
     # Defition for Play and Exit Button
     def gameUI(self):
         uiCollide = pygame.sprite.spritecollide(crosshair, stage.ui_group, False)
+        btnSound = pygame.mixer.Sound('assets/btn.ogg')
+        
+        if uiCollide and uiCollide[0].type == "button":
+            btnSound.play()
+            time.sleep(0.4)
+
         if uiCollide and uiCollide[0].label == "PLAY" or uiCollide[0].label == "REPLAY":
             stage.createBall()
             stage.currentScreen = "Game Screen" # Changing screen to Game Play
@@ -82,9 +88,10 @@ class Crosshair(pygame.sprite.Sprite):
     def shoot(self):
         # Checking whether crosshair is on ball while shooting
         ball = pygame.sprite.spritecollide(crosshair, stage.ball_group, False)
-        
+        shootSound = pygame.mixer.Sound('assets/shoot.ogg') 
         # Checking if ball is even or odd.
         if ball and ball[0].is_even:
+            shootSound.play()
             stage.totalEvenBalls -= 1
             stage.ball_group.remove(ball[0])
             if stage.totalEvenBalls <= 0:
@@ -220,7 +227,8 @@ class Stage():
 
     def menuScreen(self, type):
         self.commonEvents(crosshair.gameUI)
-        # screen.blit(self.title, (int(screenWidth/2) - int(self.title.get_width()/2),10))
+        pygame.mixer.music.stop()
+        
         if type == "Main Menu":
             if self.ui_group.sprites()[1].label != "PLAY":
                 self.ui_group = pygame.sprite.Group()
@@ -242,6 +250,9 @@ class Stage():
         self.crossHairRender()    
 
     def gameScreen(self):
+        if not pygame.mixer.music.get_busy():
+            pygame.mixer.music.play(-1)
+
         self.commonEvents(crosshair.shoot)
         timer = self.timer // 60
         self.timerText = self.font.render(f"TIMER: {timer}", True, (255,255,255))
@@ -294,6 +305,8 @@ for row in range(tile_row):
 crosshair = Crosshair('assets/crosshair.png')
 crosshair_group = pygame.sprite.Group()
 crosshair_group.add(crosshair)
+
+pygame.mixer.music.load("assets/backMusic.mp3")
 
 stage = Stage()
 
